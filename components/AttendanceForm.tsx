@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Hash, Clock, CheckCircle, AlertCircle, LogOut } from 'lucide-react';
+import { User, Hash, Clock, CheckCircle, AlertCircle, LogOut, Calendar } from 'lucide-react';
 import { AttendanceRecord } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import toast from 'react-hot-toast';
@@ -13,6 +13,7 @@ interface AttendanceFormProps {
 export const AttendanceForm: React.FC<AttendanceFormProps> = ({ onCheckIn, onCheckOut, currentRecords }) => {
   const [studentName, setStudentName] = useState('');
   const [systemNumber, setSystemNumber] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [mode, setMode] = useState<'check-in' | 'check-out'>('check-in');
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -32,7 +33,6 @@ export const AttendanceForm: React.FC<AttendanceFormProps> = ({ onCheckIn, onChe
   useEffect(() => {
     if (activeSession && mode === 'check-in') {
       // Suggest switching to check-out if an active session exists
-      // We won't force it to avoid UI flickering while typing, but could show a hint
     }
   }, [studentName, systemNumber, activeSession, mode]);
 
@@ -65,7 +65,7 @@ export const AttendanceForm: React.FC<AttendanceFormProps> = ({ onCheckIn, onChe
         id: uuidv4(),
         studentName,
         systemNumber,
-        date: currentTime.toISOString().split('T')[0],
+        date: selectedDate, // Use the selected date
         checkInTime: timeString,
         status: 'Active',
         timestamp: Date.now()
@@ -89,7 +89,7 @@ export const AttendanceForm: React.FC<AttendanceFormProps> = ({ onCheckIn, onChe
       const [outHours, outMinutes] = timeString.split(':').map(Number);
       
       let durationMinutes = (outHours * 60 + outMinutes) - (inHours * 60 + inMinutes);
-      // Handle day wraparound if necessary (simplified here assuming same day)
+      // Handle day wraparound if necessary
       if (durationMinutes < 0) durationMinutes += 24 * 60;
 
       onCheckOut(activeSession.id, timeString, durationMinutes);
@@ -148,6 +148,22 @@ export const AttendanceForm: React.FC<AttendanceFormProps> = ({ onCheckIn, onChe
 
             {/* Inputs */}
             <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Calendar className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    required
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Student Name</label>
                 <div className="relative">
